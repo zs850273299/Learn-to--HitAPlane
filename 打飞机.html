@@ -1,0 +1,373 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en">
+<head>
+    <meta http-equiv="Content-Type" content="text/html;charset=UTF-8" />
+    <title>Document</title>
+    <style type="text/css" media="screen">
+        *{
+         margin: 0;
+         padding: 0;
+        }
+        button{
+            outline: none;
+        }
+        #maindiv{
+            width: 100%;
+            height: 100%;
+            background-image: url('images/imgPlane/bg.png');
+            position: absolute;
+            overflow: hidden;
+        }
+        #startdiv{
+            position: absolute;
+            width: 150px;
+            height: 30px;
+            background: #c4c9ca;
+            top: 400px;
+            left: 50%;
+            margin: -75px;
+            border: 1px solid black;
+            border-radius: 30px;
+            display: block;
+            z-index: 99;
+        }
+        #scorediv{
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            display: none;
+            z-index: 99;
+        }
+        #enddiv{
+            position: absolute;
+            width: 150px;
+            height: 30px;
+            background: #c4c9ca;
+            top: 500px;
+            left: 50%;
+            margin: -75px;
+            border: 1px solid black;
+            border-radius: 30px;
+            display: none;
+            z-index: 99;
+        }
+        .map{
+            width: 100%;
+            height: 100%;
+            position: absolute;
+        }
+        .myplane{
+            width: 66px;
+            height: 80px;
+            position: absolute;
+            z-index: 9;
+        }
+        .bullet{
+            position: absolute;
+        }
+        .prop{
+            width: 38px;
+            height: 68px;
+            position: absolute;
+        }
+        .enemy1{
+            width: 34px;
+            height: 24px;
+            position: absolute;
+        }
+        .enemy2{
+            width: 46px;
+            height: 60px;
+            position: absolute;
+        }
+        .enemy3{
+            width: 110px;
+            height: 164px;
+            position: absolute;
+        }
+    </style>
+</head>
+<body>
+    <div id="maindiv">
+        <button id="startdiv">开始游戏</button>
+        <h3 id="scorediv">分数:0</h3>
+        <button id="enddiv">重新开始</button>
+    </div>
+<script type="text/javascript">
+var omaindiv=document.getElementById("maindiv");
+var ostartdiv=document.getElementById("startdiv");
+var oscorediv=document.getElementById("scorediv");
+var oenddiv=document.getElementById("enddiv");
+
+
+// ==========================================================================
+// 创建地图类
+function Map(id){
+    this.dom=document.createElement("div");
+    document.getElementById(id).appendChild(this.dom);
+    this.dom.className="map";
+    this.dom.style.width="100%";
+    this.dom.style.height="100%";
+}
+
+// ==========================================================================
+// 创建我的飞机类
+function Plane(hp,width,height,left,top,imgsrc,dieimgsrc){
+    this.bulletnum=0;
+    this.hp=hp;
+    this.width=width;
+    this.height=height;
+    this.left=0;
+    this.top=0;
+    this.imgsrc=imgsrc;
+    this.dieimgsrc=dieimgsrc;
+
+    this.dom=document.createElement("img");
+    oMap.dom.appendChild(this.dom);
+    this.dom.className="myplane";
+}
+
+Plane.prototype.init=function(){
+    var self=this;
+    document.onmousemove=function(event){
+        self.left=event.clientX-self.width/2;
+        self.top=event.clientY;
+        self.left<0 && (self.left=0);
+        self.left>oMap.dom.clientWidth-self.width && (self.left=oMap.dom.clientWidth-self.width);
+        self.top<0 && (self.top=0);
+        self.top>=oMap.dom.clientHeight-self.height && (self.top=oMap.dom.clientHeight-self.height);
+        self.render();
+    }
+}
+
+Plane.prototype.render=function(){
+    this.dom.style.left=this.left+"px";
+    this.dom.style.top=this.top+"px";
+    this.dom.src=this.imgsrc;
+}
+
+Plane.prototype.die=function(){
+    this.dom.src=this.dieimgsrc;
+    document.onmousemove=null;
+}
+
+// ==========================================================================
+// 创建敌人飞机类
+function Enemy(){
+    this.type=6*Math.random();
+    this.dom=document.createElement("img");
+    oMap.dom.appendChild(this.dom);
+    if(this.type<3){
+        this.width=34;
+        this.height=24;
+        this.speed=5;
+        this.hp=1;
+        this.dom.className="enemy1";
+        this.imgsrc='images/imgPlane/enemy1.png';
+        this.dieimgsrc='images/imgPlane/enemy1boom.gif';
+    }else if(this.type<5){
+        this.width=46;
+        this.height=60;
+        this.speed=4;
+        this.hp=3;
+        this.dom.className="enemy2";
+        this.imgsrc='images/imgPlane/enemy2.png';
+        this.dieimgsrc='images/imgPlane/enemy2boom.gif';
+    }else{
+        this.width=110;
+        this.height=164;
+        this.speed=2;
+        this.hp=5;
+        this.dom.className="enemy3";
+        this.imgsrc='images/imgPlane/enemy3.png';
+        this.dieimgsrc='images/imgPlane/enemy3boom.gif';
+    }
+    this.left=parseInt((oMap.dom.clientWidth-this.width)*Math.random());
+    this.top=-this.height;
+    this.live=true;
+    this.dietime=0;
+
+    this.move();
+    this.render();
+}
+
+Enemy.prototype.move=function(){
+    this.top+=this.speed;
+}
+
+Enemy.prototype.render=function(){
+    this.dom.style.left=this.left+10+"px";
+    this.dom.style.top=this.top+"px";
+    this.dom.src=this.imgsrc;
+}
+
+// ==========================================================================
+//创建子弹类
+function Bullet(){
+    this.dom=document.createElement("img");
+    oMap.dom.appendChild(this.dom);
+    this.dom.className="bullet";
+
+    if(myplane.bulletnum>300){
+        this.width=48;
+        this.left=myplane.left+myplane.width/7;
+        this.dom.src='images/imgPlane/bullet2.png';
+    }else{
+        this.width=6;
+        this.left=myplane.left+myplane.width/2;
+        this.dom.src='images/imgPlane/bullet1.png';
+    }
+    this.height=14;
+    this.top=myplane.top+30;
+    this.dom.style.width=this.width+"px";
+    this.dom.style.height=this.height+"px";
+    this.dom.style.left=this.left+"px";
+    this.dom.style.top=this.top+"px";
+    this.moverender();
+}
+
+Bullet.prototype.moverender=function(){
+    this.top-=20;
+    this.dom.style.left=this.left+"px";
+    this.dom.style.top=this.top+"px";
+}
+
+// ==========================================================================
+//创建空投类
+function Prop(){
+    this.dom=document.createElement("img");
+    oMap.dom.appendChild(this.dom);
+    this.dom.className="prop";
+    this.width=38;
+    this.height=68;
+    this.left=parseInt((oMap.dom.clientWidth-this.width)*Math.random());
+    this.top=-this.height;
+    this.dom.src='images/imgPlane/prop.png';
+
+    this.dom.style.width=this.width+"px";
+    this.dom.style.height=this.height+"px";
+    this.dom.style.left=this.left+"px";
+    this.dom.style.top=this.top+"px";
+    this.moverender();
+}
+
+Prop.prototype.moverender=function(){
+    this.left+=0.5;
+    this.top+=1.5;
+    this.dom.style.left=this.left+"px";
+    this.dom.style.top=this.top+"px";
+}
+
+// ==========================================================================
+function start(){
+        //移动背景
+        omaindiv.style.backgroundPositionY=bgY+"px";
+        bgY+=0.5;
+        bgY==568 && (bgY=0);
+        //生成敌人
+        mark++;
+        if(mark>20){
+            enemyArr.push(new Enemy());
+            mark=0;
+        }
+        //生成空投/碰撞检测
+        if(oprop==null){
+            myplane.bulletnum<=0 && (oprop=new Prop());
+        }else{
+            oprop.moverender();
+            if(oprop.top>1000){
+                oMap.dom.removeChild(oprop.dom);
+                oprop=null;
+            }
+            if(myplane.left>(oprop.left-myplane.width) && myplane.left<(oprop.left+oprop.width) && myplane.top>(oprop.top-myplane.height) && myplane.top<(oprop.top+oprop.height)){
+                    myplane.bulletnum=600;
+                    oMap.dom.removeChild(oprop.dom);
+                    oprop=null;
+            }
+        }
+        //生成子弹
+            bulletArr.push(new Bullet());
+            myplane.bulletnum>0 && myplane.bulletnum--;
+
+        //移动子弹并且出界后删除子弹
+        for(var i=0;i<bulletArr.length;i++){
+            bulletArr[i].moverender();
+            if(bulletArr[i].top<-20){
+                oMap.dom.removeChild(bulletArr[i].dom);
+                bulletArr.splice(i,1);
+                i--;
+            }
+        }
+        //出界后删除敌人
+        for(var i=0;i<enemyArr.length;i++){
+            enemyArr[i].move();
+            enemyArr[i].render();
+            if(enemyArr[i].live && enemyArr[i].top>1000){
+                enemyArr[i].live=false;
+            }
+
+            //敌人若处于死亡状态则延时删除敌人播放爆炸动画
+            if(!enemyArr[i].live){
+                enemyArr[i].dom.src=enemyArr[i].dieimgsrc;
+                enemyArr[i].dietime++;
+                if(enemyArr[i].dietime>10){
+                    oMap.dom.removeChild(enemyArr[i].dom);
+                    enemyArr.splice(i,1);
+                    i--;
+                }
+            }
+        }
+        //碰撞检测
+        for(var k=0;k<enemyArr.length;k++){
+            for(var j=0;j<bulletArr.length;j++){
+                if(enemyArr[k].live){
+                    //判断子弹与敌机碰撞
+                    if(bulletArr[j].left>(enemyArr[k].left-bulletArr[j].width) && bulletArr[j].left<(enemyArr[k].left+enemyArr[k].width) && bulletArr[j].top>(enemyArr[k].top-bulletArr[j].height) && bulletArr[j].top<(enemyArr[k].top+enemyArr[k].height)){
+
+                            //敌机血量减1
+                            //删除子弹
+                            enemyArr[k].hp--;
+                            oMap.dom.removeChild(bulletArr[j].dom);
+                            bulletArr.splice(j,1);
+                            j--;
+                            //敌机血量为0，死亡状态
+                            if(enemyArr[k].hp<=0){
+                                enemyArr[k].live=false;
+                                score+=100/enemyArr[k].speed;
+                                oscorediv.innerHTML="分数："+score;
+                            }
+                    }
+                    //判断自己与敌机碰撞
+                    if(myplane.left>(enemyArr[k].left-myplane.width) && myplane.left<(enemyArr[k].left+enemyArr[k].width) && myplane.top>(enemyArr[k].top-myplane.height) && myplane.top<(enemyArr[k].top+enemyArr[k].height)){
+                            myplane.die();
+                            document.onmousemove=null;
+                            oenddiv.style.display="block";
+                            clearInterval(timer);
+                    }
+
+                }
+            }
+        }
+}
+// ==========================================================================
+var oMap=new Map("maindiv");
+var enemyArr=[];
+var bulletArr=[];
+var bgY=0;
+var mark=0;
+var timer;
+var oprop;
+var score=0;
+var myplane=new Plane(1,66,80,500,500,'images/imgPlane/my.gif','images/imgPlane/myboom.gif');
+ostartdiv.onclick=function(){
+    myplane.init();
+    ostartdiv.style.display="none";
+    oscorediv.style.display="block";
+    timer=setInterval(start,20);
+}
+oenddiv.onclick=function(){
+    location.reload(true);
+}
+</script>
+</body>
+</html>
